@@ -1,6 +1,7 @@
 import 'reflect-metadata'
 
 import express from 'express'
+import cors from 'cors'
 import { __prod__ } from './constants'
 import { ApolloServer } from 'apollo-server-express'
 import mikroConfig from './mikro-orm.config'
@@ -12,7 +13,6 @@ import { UserResolver } from './resolvers/user'
 import redis from 'redis'
 import session from 'express-session'
 import connectRedis from 'connect-redis'
-import { MyContext } from './types'
 
 const main = async () => {
     const orm = await MikroORM.init(mikroConfig)
@@ -22,6 +22,13 @@ const main = async () => {
 
     const RedisStore = connectRedis(session)
     const redisClient = redis.createClient()
+
+    app.use(
+        cors({
+            origin: 'http://localhost:3000',
+            credentials: true,
+        })
+    )
 
     app.use(
         session({
@@ -51,14 +58,17 @@ const main = async () => {
             resolvers: [UserResolver, PostResolver],
             validate: false,
         }),
-        context: ({ req, res }): MyContext => ({
+        context: ({ req, res }) => ({
             em: orm.em,
             req,
             res,
         }),
     })
 
-    apolloServer.applyMiddleware({ app })
+    apolloServer.applyMiddleware({
+        app,
+        cors: false,
+    })
 
     app.listen(4000, () => {
         console.log('Server listening to port 4000.')
