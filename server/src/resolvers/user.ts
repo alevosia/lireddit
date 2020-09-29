@@ -53,7 +53,7 @@ export class UserResolver {
     // Me ===========================================
     @Query(() => User, { nullable: true })
     async me(@Ctx() { em, req }: MyContext): Promise<User | null> {
-        const id = req.session?.userId
+        const id = req.session.userId
 
         // no session id / not logged in
         if (!id) {
@@ -147,7 +147,7 @@ export class UserResolver {
             await em.persistAndFlush(user)
 
             // log in user automatically
-            req.session!.userId = user.id
+            req.session.userId = user.id
 
             return { user }
         } catch (error) {
@@ -200,7 +200,7 @@ export class UserResolver {
         // Set user id in session
         // This will set a cookie on the user which contains their user id
         // and keep them logged in
-        req.session!.userId = user.id
+        req.session.userId = user.id
 
         return { user }
     }
