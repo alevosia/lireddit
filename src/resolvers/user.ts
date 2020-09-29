@@ -50,6 +50,27 @@ class AuthResponse {
 
 @Resolver()
 export class UserResolver {
+    // Me ===========================================
+    @Query(() => User, { nullable: true })
+    async me(@Ctx() { em, req }: MyContext): Promise<User | null> {
+        const id = req.session?.userId
+
+        // no session id / not logged in
+        if (!id) {
+            return null
+        }
+
+        const user = await em.findOne(User, { id })
+
+        // user does not exist in database
+        if (!user) {
+            return null
+        }
+
+        return user
+    }
+
+    // User ===========================================
     @Query(() => User, { nullable: true })
     async user(
         @Arg('input') { id, username }: UserInput,
@@ -68,15 +89,17 @@ export class UserResolver {
         }
     }
 
+    // Users ===========================================
     @Query(() => [User])
     async users(@Ctx() { em }: MyContext): Promise<User[]> {
         return em.find(User, {})
     }
 
+    // Register ===========================================
     @Mutation(() => AuthResponse)
     async register(
         @Arg('input') { username, password }: AuthInput,
-        @Ctx() { em }: MyContext
+        @Ctx() { em, req }: MyContext
     ): Promise<AuthResponse> {
         if (username.length < 6) {
             return {
@@ -123,6 +146,9 @@ export class UserResolver {
 
             await em.persistAndFlush(user)
 
+            // log in user automatically
+            req.session!.userId = user.id
+
             return { user }
         } catch (error) {
             console.error(error)
@@ -139,10 +165,11 @@ export class UserResolver {
         }
     }
 
+    // Login ===========================================
     @Mutation(() => AuthResponse)
     async login(
         @Arg('input') { username, password }: AuthInput,
-        @Ctx() { em }: MyContext
+        @Ctx() { em, req }: MyContext
     ): Promise<AuthResponse> {
         const user = await em.findOne(User, { username })
 
@@ -169,6 +196,11 @@ export class UserResolver {
                 ],
             }
         }
+
+        // Set user id in session
+        // This will set a cookie on the user which contains their user id
+        // and keep them logged in
+        req.session!.userId = user.id
 
         return { user }
     }
