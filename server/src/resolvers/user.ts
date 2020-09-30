@@ -1,68 +1,14 @@
-import { MyContext } from '../types'
-import {
-    Arg,
-    Ctx,
-    Field,
-    InputType,
-    Int,
-    Mutation,
-    ObjectType,
-    Query,
-    Resolver,
-} from 'type-graphql'
-import { User } from '../entities/User'
 import argon from 'argon2'
+import { Arg, Ctx, Int, Mutation, Query, Resolver } from 'type-graphql'
 import { COOKIE_NAME } from '../constants'
+import { User } from '../entities/User'
+import { AuthResponse } from '../typedefs/AuthResponse'
+import { LoginInput } from '../typedefs/LoginInput'
+import { RegisterInput } from '../typedefs/RegisterInput'
+import { UserInput } from '../typedefs/UserInput'
+import { MyContext } from '../types'
 import { sendEmail } from '../utils/sendEmail'
-import isEmail from 'validator/lib/isEmail'
-
-@InputType()
-class UserInput {
-    @Field({ nullable: true })
-    id?: number
-
-    @Field({ nullable: true })
-    username?: string
-}
-
-@InputType()
-class RegisterInput {
-    @Field()
-    username: string
-
-    @Field()
-    email: string
-
-    @Field()
-    password: string
-}
-
-@InputType()
-class LoginInput {
-    @Field()
-    username: string
-
-    @Field()
-    password: string
-}
-
-@ObjectType()
-class FieldError {
-    @Field()
-    field: string
-
-    @Field()
-    message: string
-}
-
-@ObjectType()
-class AuthResponse {
-    @Field(() => [FieldError], { nullable: true })
-    errors?: FieldError[]
-
-    @Field(() => User, { nullable: true })
-    user?: User
-}
+import { validateRegister } from '../utils/validateRegister'
 
 @Resolver()
 export class UserResolver {
@@ -117,37 +63,10 @@ export class UserResolver {
         @Arg('input') { username, password, email }: RegisterInput,
         @Ctx() { em, req }: MyContext
     ): Promise<AuthResponse> {
-        if (username.length < 6) {
-            return {
-                errors: [
-                    {
-                        field: 'username',
-                        message: 'Username length must be at least 6.',
-                    },
-                ],
-            }
-        }
+        const errors = validateRegister({ username, password, email })
 
-        if (password.length < 8) {
-            return {
-                errors: [
-                    {
-                        field: 'password',
-                        message: 'Password length must be at least 8.',
-                    },
-                ],
-            }
-        }
-
-        if (!isEmail(email)) {
-            return {
-                errors: [
-                    {
-                        field: 'email',
-                        message: 'Invalid email address.',
-                    },
-                ],
-            }
+        if (errors) {
+            return { errors }
         }
 
         // check if user already exists
@@ -200,7 +119,7 @@ export class UserResolver {
                     {
                         field: 'unknown',
                         message:
-                            'Something went wrong. Please try again later.',
+                            'Something went wrong. Please try again later!',
                     },
                 ],
             }
