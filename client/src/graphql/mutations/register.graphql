@@ -1,8 +1,7 @@
-mutation Register($input: AuthInput!) {
+mutation Register($input: RegisterInput!) {
     register(input: $input) {
         user {
-            id
-            username
+            ...RegularUser
         }
         errors {
             field

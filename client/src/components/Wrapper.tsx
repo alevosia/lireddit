@@ -1,5 +1,5 @@
-import React from 'react'
 import { Box } from '@chakra-ui/core'
+import React from 'react'
 
 interface Props {
     variant?: 'small' | 'regular'
