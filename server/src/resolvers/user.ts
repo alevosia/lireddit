@@ -4,6 +4,7 @@ import {
     Ctx,
     Field,
     InputType,
+    Int,
     Mutation,
     ObjectType,
     Query,
@@ -11,6 +12,9 @@ import {
 } from 'type-graphql'
 import { User } from '../entities/User'
 import argon from 'argon2'
+import { COOKIE_NAME } from '../constants'
+import { sendEmail } from '../utils/sendEmail'
+import isEmail from 'validator/lib/isEmail'
 
 @InputType()
 class UserInput {
@@ -22,7 +26,19 @@ class UserInput {
 }
 
 @InputType()
-class AuthInput {
+class RegisterInput {
+    @Field()
+    username: string
+
+    @Field()
+    email: string
+
+    @Field()
+    password: string
+}
+
+@InputType()
+class LoginInput {
     @Field()
     username: string
 
@@ -98,7 +114,7 @@ export class UserResolver {
     // Register ===========================================
     @Mutation(() => AuthResponse)
     async register(
-        @Arg('input') { username, password }: AuthInput,
+        @Arg('input') { username, password, email }: RegisterInput,
         @Ctx() { em, req }: MyContext
     ): Promise<AuthResponse> {
         if (username.length < 6) {
@@ -123,10 +139,21 @@ export class UserResolver {
             }
         }
 
-        // check if user already exists
-        const foundUser = await em.findOne(User, { username })
+        if (!isEmail(email)) {
+            return {
+                errors: [
+                    {
+                        field: 'email',
+                        message: 'Invalid email address.',
+                    },
+                ],
+            }
+        }
 
-        if (foundUser) {
+        // check if user already exists
+        const foundUsername = await em.findOne(User, { username })
+
+        if (foundUsername) {
             return {
                 errors: [
                     {
@@ -137,11 +164,26 @@ export class UserResolver {
             }
         }
 
+        // check if user already exists
+        const foundEmail = await em.findOne(User, { email })
+
+        if (foundEmail) {
+            return {
+                errors: [
+                    {
+                        field: 'email',
+                        message: 'Email address is already taken.',
+                    },
+                ],
+            }
+        }
+
         try {
             const hashedPassword = await argon.hash(password)
             const user = em.create(User, {
                 username,
                 password: hashedPassword,
+                email,
             })
 
             await em.persistAndFlush(user)
@@ -168,7 +210,7 @@ export class UserResolver {
     // Login ===========================================
     @Mutation(() => AuthResponse)
     async login(
-        @Arg('input') { username, password }: AuthInput,
+        @Arg('input') { username, password }: LoginInput,
         @Ctx() { em, req }: MyContext
     ): Promise<AuthResponse> {
         const user = await em.findOne(User, { username })
@@ -203,5 +245,72 @@ export class UserResolver {
         req.session.userId = user.id
 
         return { user }
+    }
+
+    // Delete User =======================================
+    @Mutation(() => Boolean)
+    async deleteUser(
+        @Ctx() { em }: MyContext,
+        @Arg('id', () => Int) id: number
+    ): Promise<Boolean> {
+        const user = await em.findOne(User, { id })
+
+        if (!user) {
+            return false
+        }
+
+        await em.removeAndFlush(user)
+
+        return true
+    }
+
+    // Logout =======================================
+    @Mutation(() => Boolean)
+    async logout(@Ctx() { req, res }: MyContext): Promise<Boolean> {
+        const result = await new Promise<Boolean>((resolve) =>
+            req.session.destroy((err) => {
+                res.clearCookie(COOKIE_NAME)
+
+                if (err) {
+                    console.error(err)
+                    resolve(false)
+                } else {
+                    resolve(true)
+                }
+            })
+        )
+
+        return result
+    }
+
+    // Forgot Password =======================================
+    @Mutation(() => Boolean)
+    async forgotPassword(
+        @Ctx() { em }: MyContext,
+        @Arg('email') email: string
+    ): Promise<Boolean> {
+        const user = await em.findOne(User, { email })
+
+        if (!user) {
+            return false
+        }
+
+        try {
+            await sendEmail({
+                from: '"Lireddit" <no-reply@lireddit.com>',
+                to: email,
+                subject: 'Forgot Password',
+                html: `
+                    <h1>Hi there, ${user.username}!</h1>
+                    <br />
+                    <p>You've requested a password reset on our website.
+                `,
+            })
+
+            return true
+        } catch (error) {
+            console.error(error)
+            return false
+        }
     }
 }
