@@ -51,13 +51,12 @@ const Login: NextPage = () => {
                                 type="password"
                             />
                         </Box>
-                        <NextLink href="/forgot-password">
-                            <Link color="#0000FF" mt={1} display="inline-block">
-                                forgot password?
-                            </Link>
-                        </NextLink>
+                        <Box mt={1}>
+                            <NextLink href="/forgot-password">
+                                <Link color="#0000FF">forgot password?</Link>
+                            </NextLink>
+                        </Box>
                         <Button
-                            display="block"
                             mt={4}
                             type="submit"
                             isLoading={isSubmitting}
