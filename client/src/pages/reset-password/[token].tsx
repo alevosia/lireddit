@@ -70,6 +70,7 @@ const ResetPassword: NextPage = () => {
                                 placeholder="new password"
                                 label="New Password"
                                 type="password"
+                                required
                             />
                         </Box>
                         {tokenError ? (

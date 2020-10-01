@@ -42,6 +42,7 @@ const Login: NextPage = () => {
                             placeholder="username"
                             label="Username"
                             type="text"
+                            required
                         />
                         <Box mt={4}>
                             <InputField
@@ -49,6 +50,7 @@ const Login: NextPage = () => {
                                 placeholder="password"
                                 label="Password"
                                 type="password"
+                                required
                             />
                         </Box>
                         <Box mt={1}>

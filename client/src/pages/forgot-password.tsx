@@ -17,16 +17,6 @@ const ForgotPassword: NextPage = () => {
     const [{}, forgotPassword] = useForgotPasswordMutation()
     const [status, setStatus] = useState<Status>('IDLE')
 
-    if (status === 'ERROR') {
-        return (
-            <Wrapper variant="small">
-                <Box>
-                    Failed to request a password reset. Please try again later.
-                </Box>
-            </Wrapper>
-        )
-    }
-
     if (status === 'SENT') {
         return (
             <Wrapper variant="small">
@@ -45,13 +35,9 @@ const ForgotPassword: NextPage = () => {
                     email: '',
                 }}
                 onSubmit={async (values) => {
-                    const response = await forgotPassword({ input: values })
+                    await forgotPassword({ input: values })
 
-                    if (response.data?.forgotPassword) {
-                        setStatus('SENT')
-                    } else if (response.data?.forgotPassword) {
-                        setStatus('ERROR')
-                    }
+                    setStatus('SENT')
                 }}
             >
                 {({ isSubmitting }) => (
@@ -61,6 +47,7 @@ const ForgotPassword: NextPage = () => {
                             placeholder="email address"
                             label="Email Address"
                             type="email"
+                            required
                         />
                         <Button
                             mt={4}

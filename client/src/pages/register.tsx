@@ -42,6 +42,7 @@ const Register: NextPage = () => {
                             placeholder="username"
                             label="Username"
                             type="text"
+                            required
                         />
                         <Box mt={4}>
                             <InputField
@@ -49,6 +50,7 @@ const Register: NextPage = () => {
                                 placeholder="email address"
                                 label="Email"
                                 type="text"
+                                required
                             />
                         </Box>
                         <Box mt={4}>
@@ -57,6 +59,7 @@ const Register: NextPage = () => {
                                 placeholder="password"
                                 label="Password"
                                 type="password"
+                                required
                             />
                         </Box>
                         <Button
