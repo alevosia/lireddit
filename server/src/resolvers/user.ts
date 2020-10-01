@@ -122,9 +122,9 @@ export class UserResolver {
             return {
                 errors: [
                     {
-                        field: 'unknown',
+                        field: 'username',
                         message:
-                            'Something went wrong. Please try again later!',
+                            'Something went wrong. Please try again later.',
                     },
                 ],
             }
