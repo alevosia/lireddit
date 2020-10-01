@@ -1,4 +1,4 @@
-import { Box, Button } from '@chakra-ui/core'
+import { Box, Button, Link } from '@chakra-ui/core'
 import { Form, Formik } from 'formik'
 import { NextPage } from 'next'
 import { withUrqlClient } from 'next-urql'
@@ -9,6 +9,7 @@ import { Wrapper } from '../components/Wrapper'
 import { LoginInput, useLoginMutation } from '../generated/graphql'
 import { createUrqlClient } from '../utils/createUrqlClient'
 import { toErrorMap } from '../utils/toErrorMap'
+import NextLink from 'next/link'
 
 const Login: NextPage = () => {
     const router = useRouter()
@@ -50,7 +51,13 @@ const Login: NextPage = () => {
                                 type="password"
                             />
                         </Box>
+                        <NextLink href="/forgot-password">
+                            <Link color="#0000FF" mt={1} display="inline-block">
+                                forgot password?
+                            </Link>
+                        </NextLink>
                         <Button
+                            display="block"
                             mt={4}
                             type="submit"
                             isLoading={isSubmitting}
