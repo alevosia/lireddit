@@ -293,7 +293,7 @@ export class UserResolver {
         em.persistAndFlush(user)
 
         // invalidate token
-        redis.del(key)
+        await redis.del(key)
 
         // log in user after resetting password
         req.session.userId = user.id
