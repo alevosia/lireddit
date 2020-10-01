@@ -1,4 +1,4 @@
-import { Box, Button } from '@chakra-ui/core'
+import { Box, Button, Flex, Link } from '@chakra-ui/core'
 import { Formik, Form, FormikHelpers } from 'formik'
 import { NextPage } from 'next'
 import { withUrqlClient } from 'next-urql'
@@ -12,6 +12,7 @@ import {
 } from '../../generated/graphql'
 import { createUrqlClient } from '../../utils/createUrqlClient'
 import { toErrorMap } from '../../utils/toErrorMap'
+import NextLink from 'next/link'
 
 type ResetPasswordSubmitHandler = (
     values: ResetPasswordInput,
@@ -63,10 +64,7 @@ const ResetPassword: NextPage = () => {
             >
                 {({ isSubmitting }) => (
                     <Form>
-                        <Box color="#FF0000" textAlign="center" minH="24px">
-                            {tokenError}
-                        </Box>
-                        <Box mt={4}>
+                        <Box>
                             <InputField
                                 name="newPassword"
                                 placeholder="new password"
@@ -74,6 +72,18 @@ const ResetPassword: NextPage = () => {
                                 type="password"
                             />
                         </Box>
+                        {tokenError ? (
+                            <Flex mt={2}>
+                                <Box color="#FF0000" mr={4}>
+                                    {tokenError}
+                                </Box>
+                                <NextLink href="/forgot-password">
+                                    <Link color="#0000FF">
+                                        request for a new one
+                                    </Link>
+                                </NextLink>
+                            </Flex>
+                        ) : null}
                         <Button
                             mt={4}
                             type="submit"
