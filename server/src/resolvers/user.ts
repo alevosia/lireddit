@@ -230,9 +230,12 @@ export class UserResolver {
             await sendEmail({
                 from: '"Lireddit" <no-reply@lireddit.com>',
                 to: email,
-                subject: 'Forgot Password',
+                subject: 'Forgot Password - Lireddit',
                 html: `
-                    <a href="http://localhost:3000/reset-password/${token}">reset password</a>
+                    <h1>Hi there, ${user.username}!</h1>
+                    <p>You have recently requested for password reset from us.</p>
+                    <a href="http://localhost:3000/reset-password/${token}">
+                    Click here</a> to reset your password.
                 `,
             })
 
