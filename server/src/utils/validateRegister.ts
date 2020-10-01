@@ -1,5 +1,5 @@
 import isEmail from 'validator/lib/isEmail'
-import { RegisterInput } from '../typedefs/RegisterInput'
+import { RegisterInput } from '../typedefs'
 
 type Error = {
     field: string

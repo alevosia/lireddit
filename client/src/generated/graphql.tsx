@@ -23,7 +23,7 @@ export type Query = {
 
 
 export type QueryPostArgs = {
-  id: Scalars['Float'];
+  input: FetchPostInput;
 };
 
 
@@ -39,6 +39,10 @@ export type Post = {
   title: Scalars['String'];
 };
 
+export type FetchPostInput = {
+  id: Scalars['Int'];
+};
+
 export type User = {
   __typename?: 'User';
   id: Scalars['Float'];
@@ -49,7 +53,7 @@ export type User = {
 };
 
 export type UserInput = {
-  id?: Maybe<Scalars['Float']>;
+  id?: Maybe<Scalars['Int']>;
   username?: Maybe<Scalars['String']>;
 };
 
@@ -68,13 +72,12 @@ export type Mutation = {
 
 
 export type MutationCreatePostArgs = {
-  title: Scalars['String'];
+  input: CreatePostInput;
 };
 
 
 export type MutationUpdatePostArgs = {
-  title: Scalars['String'];
-  id: Scalars['Float'];
+  input: UpdatePostInput;
 };
 
 
@@ -94,7 +97,7 @@ export type MutationLoginArgs = {
 
 
 export type MutationDeleteUserArgs = {
-  id: Scalars['Int'];
+  input: DeleteUserInput;
 };
 
 
@@ -105,6 +108,15 @@ export type MutationForgotPasswordArgs = {
 
 export type MutationResetPasswordArgs = {
   input: ResetPasswordInput;
+};
+
+export type CreatePostInput = {
+  title: Scalars['String'];
+};
+
+export type UpdatePostInput = {
+  id: Scalars['Int'];
+  title: Scalars['String'];
 };
 
 export type AuthResponse = {
@@ -128,6 +140,10 @@ export type RegisterInput = {
 export type LoginInput = {
   username: Scalars['String'];
   password: Scalars['String'];
+};
+
+export type DeleteUserInput = {
+  id: Scalars['Int'];
 };
 
 export type ForgotPasswordInput = {
