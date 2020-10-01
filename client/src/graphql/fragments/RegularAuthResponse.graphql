@@ -1,0 +1,8 @@
+fragment RegularAuthResponse on AuthResponse {
+    user {
+        ...RegularUser
+    }
+    errors {
+        ...RegularError
+    }
+}

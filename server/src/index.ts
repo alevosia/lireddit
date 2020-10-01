@@ -1,31 +1,26 @@
 import 'reflect-metadata'
 
-import express from 'express'
-import cors from 'cors'
-import { COOKIE_NAME, __prod__ } from './constants'
-import { ApolloServer } from 'apollo-server-express'
-import mikroConfig from './mikro-orm.config'
 import { MikroORM } from '@mikro-orm/core'
+import { ApolloServer } from 'apollo-server-express'
+import connectRedis from 'connect-redis'
+import cors from 'cors'
+import express from 'express'
+import session from 'express-session'
+import Redis from 'ioredis'
 import { buildSchema } from 'type-graphql'
+import { COOKIE_NAME, __prod__ } from './constants'
+import mikroConfig from './mikro-orm.config'
 import { PostResolver } from './resolvers/post'
 import { UserResolver } from './resolvers/user'
 
-import redis from 'redis'
-import session from 'express-session'
-import connectRedis from 'connect-redis'
-import { User } from './entities/User'
-
 const main = async () => {
     const orm = await MikroORM.init(mikroConfig)
-
-    await orm.em.nativeDelete(User, {})
-
     await orm.getMigrator().up() // run migrations
 
     const app = express()
 
     const RedisStore = connectRedis(session)
-    const redisClient = redis.createClient()
+    const redis = new Redis()
 
     app.use(
         cors({
@@ -38,7 +33,7 @@ const main = async () => {
         session({
             name: COOKIE_NAME,
             store: new RedisStore({
-                client: redisClient,
+                client: redis,
                 disableTouch: true,
             }),
             cookie: {
@@ -66,6 +61,7 @@ const main = async () => {
             em: orm.em,
             req,
             res,
+            redis,
         }),
     })
 

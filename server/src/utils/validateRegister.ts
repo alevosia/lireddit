@@ -22,20 +22,20 @@ export const validateRegister = ({
         ]
     }
 
-    if (password.length < 8) {
-        return [
-            {
-                field: 'password',
-                message: 'Password length must be at least 8.',
-            },
-        ]
-    }
-
     if (!isEmail(email)) {
         return [
             {
                 field: 'email',
                 message: 'Invalid email address.',
+            },
+        ]
+    }
+
+    if (password.length < 8) {
+        return [
+            {
+                field: 'password',
+                message: 'Password length must be at least 8.',
             },
         ]
     }

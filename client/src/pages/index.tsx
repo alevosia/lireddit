@@ -1,10 +1,11 @@
 import { Box } from '@chakra-ui/core'
+import { NextPage } from 'next'
 import { withUrqlClient } from 'next-urql'
 import { NavBar } from '../components/NavBar'
 import { useAllPostsQuery } from '../generated/graphql'
 import { createUrqlClient } from '../utils/createUrqlClient'
 
-const Index: React.FC<{}> = () => {
+const Index: NextPage = () => {
     const [{ fetching, data }] = useAllPostsQuery()
 
     return (

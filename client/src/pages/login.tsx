@@ -1,21 +1,22 @@
 import { Box, Button } from '@chakra-ui/core'
 import { Form, Formik } from 'formik'
+import { NextPage } from 'next'
 import { withUrqlClient } from 'next-urql'
 import { useRouter } from 'next/router'
 import React from 'react'
 import { InputField } from '../components/InputField'
 import { Wrapper } from '../components/Wrapper'
-import { useLoginMutation } from '../generated/graphql'
+import { LoginInput, useLoginMutation } from '../generated/graphql'
 import { createUrqlClient } from '../utils/createUrqlClient'
 import { toErrorMap } from '../utils/toErrorMap'
 
-const Login: React.FC<{}> = ({}) => {
+const Login: NextPage = () => {
     const router = useRouter()
     const [{}, login] = useLoginMutation()
 
     return (
         <Wrapper variant="small">
-            <Formik
+            <Formik<LoginInput>
                 initialValues={{
                     username: '',
                     password: '',
@@ -24,8 +25,11 @@ const Login: React.FC<{}> = ({}) => {
                     const response = await login({ input: values })
 
                     if (response.data?.login.errors) {
-                        setErrors(toErrorMap(response.data.login.errors))
+                        // map the errors to the input fields
+                        const errors = toErrorMap(response.data.login.errors)
+                        setErrors(errors)
                     } else if (response.data?.login.user) {
+                        // redirect to homepage if login is successful
                         router.push('/')
                     }
                 }}

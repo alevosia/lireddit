@@ -1,6 +1,6 @@
 import argon from 'argon2'
 import { Arg, Ctx, Int, Mutation, Query, Resolver } from 'type-graphql'
-import { COOKIE_NAME } from '../constants'
+import { COOKIE_NAME, FORGOT_PASSWORD_PREFIX } from '../constants'
 import { User } from '../entities/User'
 import { AuthResponse } from '../typedefs/AuthResponse'
 import { LoginInput } from '../typedefs/LoginInput'
@@ -9,6 +9,9 @@ import { UserInput } from '../typedefs/UserInput'
 import { MyContext } from '../types'
 import { sendEmail } from '../utils/sendEmail'
 import { validateRegister } from '../utils/validateRegister'
+import { v4 as generateId } from 'uuid'
+import { ResetPasswordInput } from '../typedefs/ResetPasswordInput'
+import { ForgotPasswordInput } from '../typedefs/ForgotPAsswordInput'
 
 @Resolver()
 export class UserResolver {
@@ -205,8 +208,8 @@ export class UserResolver {
     // Forgot Password =======================================
     @Mutation(() => Boolean)
     async forgotPassword(
-        @Ctx() { em }: MyContext,
-        @Arg('email') email: string
+        @Ctx() { em, redis }: MyContext,
+        @Arg('input') { email }: ForgotPasswordInput
     ): Promise<Boolean> {
         const user = await em.findOne(User, { email })
 
@@ -214,15 +217,22 @@ export class UserResolver {
             return false
         }
 
+        const token = generateId()
+
+        await redis.set(
+            FORGOT_PASSWORD_PREFIX + token,
+            user.id,
+            'ex',
+            1000 * 60 * 60 * 24 * 3
+        ) // 3 days
+
         try {
             await sendEmail({
                 from: '"Lireddit" <no-reply@lireddit.com>',
                 to: email,
                 subject: 'Forgot Password',
                 html: `
-                    <h1>Hi there, ${user.username}!</h1>
-                    <br />
-                    <p>You've requested a password reset on our website.
+                    <a href="http://localhost:3000/reset-password/${token}">reset password</a>
                 `,
             })
 
@@ -231,5 +241,63 @@ export class UserResolver {
             console.error(error)
             return false
         }
+    }
+
+    @Mutation(() => AuthResponse)
+    async resetPassword(
+        @Arg('input')
+        { token, newPassword }: ResetPasswordInput,
+        @Ctx() { em, redis, req }: MyContext
+    ): Promise<AuthResponse> {
+        if (newPassword.length < 8) {
+            return {
+                errors: [
+                    {
+                        field: 'newPassword',
+                        message: 'Password length must be at least 8.',
+                    },
+                ],
+            }
+        }
+
+        const key = FORGOT_PASSWORD_PREFIX + token
+
+        const userId = await redis.get(key)
+
+        if (!userId) {
+            return {
+                errors: [
+                    {
+                        field: 'token',
+                        message: 'Token expired.',
+                    },
+                ],
+            }
+        }
+
+        const user = await em.findOne(User, { id: Number(userId) })
+
+        if (!user) {
+            return {
+                errors: [
+                    {
+                        field: 'token',
+                        message: 'User does not exist.',
+                    },
+                ],
+            }
+        }
+
+        // hash and update user's password
+        user.password = await argon.hash(newPassword)
+        em.persistAndFlush(user)
+
+        // invalidate token
+        redis.del(key)
+
+        // log in user after resetting password
+        req.session.userId = user.id
+
+        return { user }
     }
 }
