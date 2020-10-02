@@ -32,6 +32,11 @@ export const NavBar: React.FC<{}> = () => {
     } else {
         body = (
             <Flex>
+                <NextLink href="/create-post">
+                    <Link color="white" mr={5}>
+                        create post
+                    </Link>
+                </NextLink>
                 <Box mr={5} color="white">
                     {data.me.username}
                 </Box>
@@ -50,7 +55,7 @@ export const NavBar: React.FC<{}> = () => {
     }
 
     return (
-        <Flex bg="tomato" p={4}>
+        <Flex zIndex={1} position="sticky" top={0} bg="tomato" p={4}>
             <NextLink href="/">
                 <Link color="white">home</Link>
             </NextLink>

@@ -33,23 +33,27 @@ export type QueryUserArgs = {
 
 export type Post = {
   __typename?: 'Post';
-  id: Scalars['Float'];
+  id: Scalars['Int'];
+  author: User;
   createdAt: Scalars['String'];
   updatedAt: Scalars['String'];
   title: Scalars['String'];
-};
-
-export type FetchPostInput = {
-  id: Scalars['Int'];
+  text: Scalars['String'];
+  points: Scalars['Int'];
 };
 
 export type User = {
   __typename?: 'User';
-  id: Scalars['Float'];
+  id: Scalars['Int'];
+  posts: Array<Post>;
   createdAt: Scalars['String'];
   updatedAt: Scalars['String'];
   username: Scalars['String'];
   email: Scalars['String'];
+};
+
+export type FetchPostInput = {
+  id: Scalars['Int'];
 };
 
 export type UserInput = {
@@ -112,6 +116,7 @@ export type MutationResetPasswordArgs = {
 
 export type CreatePostInput = {
   title: Scalars['String'];
+  text: Scalars['String'];
 };
 
 export type UpdatePostInput = {
@@ -174,6 +179,23 @@ export type RegularErrorFragment = (
 export type RegularUserFragment = (
   { __typename?: 'User' }
   & Pick<User, 'id' | 'username' | 'email'>
+);
+
+export type CreatePostMutationVariables = Exact<{
+  input: CreatePostInput;
+}>;
+
+
+export type CreatePostMutation = (
+  { __typename?: 'Mutation' }
+  & { createPost: (
+    { __typename?: 'Post' }
+    & Pick<Post, 'id' | 'title' | 'text'>
+    & { author: (
+      { __typename?: 'User' }
+      & Pick<User, 'id' | 'username'>
+    ) }
+  ) }
 );
 
 export type ForgotPasswordMutationVariables = Exact<{
@@ -279,6 +301,23 @@ export const RegularAuthResponseFragmentDoc = gql`
 }
     ${RegularUserFragmentDoc}
 ${RegularErrorFragmentDoc}`;
+export const CreatePostDocument = gql`
+    mutation CreatePost($input: CreatePostInput!) {
+  createPost(input: $input) {
+    id
+    title
+    text
+    author {
+      id
+      username
+    }
+  }
+}
+    `;
+
+export function useCreatePostMutation() {
+  return Urql.useMutation<CreatePostMutation, CreatePostMutationVariables>(CreatePostDocument);
+};
 export const ForgotPasswordDocument = gql`
     mutation ForgotPassword($input: ForgotPasswordInput!) {
   forgotPassword(input: $input)
