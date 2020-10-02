@@ -2,21 +2,21 @@ import { Box, Button, Link } from '@chakra-ui/core'
 import { Form, Formik } from 'formik'
 import { NextPage } from 'next'
 import { withUrqlClient } from 'next-urql'
+import NextLink from 'next/link'
 import { useRouter } from 'next/router'
 import React from 'react'
 import { InputField } from '../components/InputField'
-import { Wrapper } from '../components/Wrapper'
+import { Layout } from '../components/Layout'
 import { LoginInput, useLoginMutation } from '../generated/graphql'
 import { createUrqlClient } from '../utils/createUrqlClient'
 import { toErrorMap } from '../utils/toErrorMap'
-import NextLink from 'next/link'
 
 const Login: NextPage = () => {
     const router = useRouter()
     const [{}, login] = useLoginMutation()
 
     return (
-        <Wrapper variant="small">
+        <Layout variant="small">
             <Formik<LoginInput>
                 initialValues={{
                     username: '',
@@ -30,8 +30,14 @@ const Login: NextPage = () => {
                         const errors = toErrorMap(response.data.login.errors)
                         setErrors(errors)
                     } else if (response.data?.login.user) {
-                        // redirect to homepage if login is successful
-                        router.push('/')
+                        const { next } = router.query
+
+                        // redirect to next path of router query
+                        if (typeof next === 'string') {
+                            router.replace(next)
+                        } else {
+                            router.replace('/')
+                        }
                     }
                 }}
             >
@@ -69,7 +75,7 @@ const Login: NextPage = () => {
                     </Form>
                 )}
             </Formik>
-        </Wrapper>
+        </Layout>
     )
 }
 
