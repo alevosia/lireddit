@@ -4,6 +4,7 @@ import { NextPage } from 'next'
 import { withUrqlClient } from 'next-urql'
 import React, { useState } from 'react'
 import { InputField } from '../components/InputField'
+import { Layout } from '../components/Layout'
 import { Wrapper } from '../components/Wrapper'
 import {
     ForgotPasswordInput,
@@ -29,7 +30,7 @@ const ForgotPassword: NextPage = () => {
     }
 
     return (
-        <Wrapper variant="small">
+        <Layout variant="small">
             <Formik<ForgotPasswordInput>
                 initialValues={{
                     email: '',
@@ -60,7 +61,7 @@ const ForgotPassword: NextPage = () => {
                     </Form>
                 )}
             </Formik>
-        </Wrapper>
+        </Layout>
     )
 }
 
