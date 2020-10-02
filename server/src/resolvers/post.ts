@@ -1,9 +1,24 @@
 import { Post } from '../entities/Post'
-import { Arg, Mutation, Query, Resolver } from 'type-graphql'
+import {
+    Arg,
+    Ctx,
+    FieldResolver,
+    Mutation,
+    Query,
+    Resolver,
+    Root,
+} from 'type-graphql'
 import { UpdatePostInput, CreatePostInput, FetchPostInput } from '../typedefs'
+import { MyContext } from 'src/types'
+import { User } from '../entities/User'
 
-@Resolver()
+@Resolver(() => Post)
 export class PostResolver {
+    @FieldResolver()
+    author(@Root() post: Post) {
+        return User.findOne(post.authorId)
+    }
+
     @Query(() => [Post])
     posts(): Promise<Post[]> {
         return Post.find()
@@ -14,9 +29,24 @@ export class PostResolver {
         return Post.findOne(id)
     }
 
+    // TODO: Add { message: string } as mutation response type
     @Mutation(() => Post)
-    async createPost(@Arg('input') { title }: CreatePostInput): Promise<Post> {
-        return await Post.create({ title }).save()
+    async createPost(
+        @Arg('input') input: CreatePostInput,
+        @Ctx() { req }: MyContext
+    ): Promise<Post | { message: string }> {
+        const userId = req.session.userId
+
+        if (!userId) {
+            return {
+                message: 'Not Authorized',
+            }
+        }
+
+        return Post.create({
+            ...input,
+            authorId: userId,
+        }).save()
     }
 
     @Mutation(() => Post, { nullable: true })

@@ -1,23 +1,37 @@
 import argon from 'argon2'
-import { Arg, Ctx, Mutation, Query, Resolver } from 'type-graphql'
+import {
+    Arg,
+    Ctx,
+    FieldResolver,
+    Mutation,
+    Query,
+    Resolver,
+    Root,
+} from 'type-graphql'
 import { v4 as generateId } from 'uuid'
 import { COOKIE_NAME, FORGOT_PASSWORD_PREFIX } from '../constants'
+import { Post } from '../entities/Post'
 import { User } from '../entities/User'
 import {
     AuthResponse,
+    DeleteUserInput,
     ForgotPasswordInput,
     LoginInput,
     RegisterInput,
     ResetPasswordInput,
     UserInput,
-    DeleteUserInput,
 } from '../typedefs'
 import { MyContext } from '../types'
 import { sendEmail } from '../utils/sendEmail'
 import { validateRegister } from '../utils/validateRegister'
 
-@Resolver()
+@Resolver(() => User)
 export class UserResolver {
+    @FieldResolver()
+    posts(@Root() user: User) {
+        return Post.find({ where: { authorId: user.id } })
+    }
+
     // Me ===========================================
     @Query(() => User, { nullable: true })
     async me(@Ctx() { req }: MyContext): Promise<User | undefined> {
