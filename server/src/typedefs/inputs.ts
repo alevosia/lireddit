@@ -4,6 +4,9 @@ import { Field, InputType, Int } from 'type-graphql'
 export class CreatePostInput {
     @Field()
     title: string
+
+    @Field()
+    text: string
 }
 
 @InputType()
