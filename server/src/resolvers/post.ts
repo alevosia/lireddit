@@ -7,10 +7,12 @@ import {
     Query,
     Resolver,
     Root,
+    UseMiddleware,
 } from 'type-graphql'
 import { UpdatePostInput, CreatePostInput, FetchPostInput } from '../typedefs'
-import { MyContext } from 'src/types'
+import { MyContext } from '../types'
 import { User } from '../entities/User'
+import { isAuth } from '../middleware/isAuth'
 
 @Resolver(() => Post)
 export class PostResolver {
@@ -31,17 +33,12 @@ export class PostResolver {
 
     // TODO: Add { message: string } as mutation response type
     @Mutation(() => Post)
+    @UseMiddleware(isAuth)
     async createPost(
         @Arg('input') input: CreatePostInput,
         @Ctx() { req }: MyContext
     ): Promise<Post | { message: string }> {
         const userId = req.session.userId
-
-        if (!userId) {
-            return {
-                message: 'Not Authorized',
-            }
-        }
 
         return Post.create({
             ...input,
