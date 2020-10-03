@@ -285,7 +285,7 @@ export type FetchAllPostsQuery = (
   { __typename?: 'Query' }
   & { posts: Array<(
     { __typename?: 'Post' }
-    & Pick<Post, 'id' | 'title' | 'text'>
+    & Pick<Post, 'id' | 'title' | 'text' | 'createdAt' | 'updatedAt' | 'points'>
     & { author: (
       { __typename?: 'User' }
       & RegularUserFragment
@@ -402,6 +402,9 @@ export const FetchAllPostsDocument = gql`
     id
     title
     text
+    createdAt
+    updatedAt
+    points
     author {
       ...RegularUser
     }

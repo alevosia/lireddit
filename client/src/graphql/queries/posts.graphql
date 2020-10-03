@@ -3,6 +3,9 @@ query FetchAllPosts($input: FetchAllPostsInput) {
         id
         title
         text
+        createdAt
+        updatedAt
+        points
         author {
             ...RegularUser
         }
