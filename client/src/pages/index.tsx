@@ -1,11 +1,11 @@
 import { NextPage } from 'next'
 import { withUrqlClient } from 'next-urql'
 import { Layout } from '../components/Layout'
-import { useAllPostsQuery } from '../generated/graphql'
+import { useFetchAllPostsQuery } from '../generated/graphql'
 import { createUrqlClient } from '../utils/createUrqlClient'
 
 const Index: NextPage = () => {
-    const [{ fetching, data }] = useAllPostsQuery()
+    const [{ fetching, data }] = useFetchAllPostsQuery()
 
     return (
         <Layout>

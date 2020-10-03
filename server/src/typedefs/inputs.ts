@@ -10,6 +10,15 @@ export class CreatePostInput {
 }
 
 @InputType()
+export class FetchAllPostsInput {
+    @Field(() => Int)
+    limit: number
+
+    @Field({ nullable: true })
+    cursor?: string
+}
+
+@InputType()
 export class FetchPostInput {
     @Field(() => Int)
     id: number

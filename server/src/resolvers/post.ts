@@ -9,10 +9,16 @@ import {
     Root,
     UseMiddleware,
 } from 'type-graphql'
-import { UpdatePostInput, CreatePostInput, FetchPostInput } from '../typedefs'
+import {
+    UpdatePostInput,
+    CreatePostInput,
+    FetchPostInput,
+    FetchAllPostsInput,
+} from '../typedefs'
 import { MyContext } from '../types'
 import { User } from '../entities/User'
 import { isAuth } from '../middleware/isAuth'
+import { FindManyOptions, LessThan } from 'typeorm'
 
 @Resolver(() => Post)
 export class PostResolver {
@@ -22,8 +28,29 @@ export class PostResolver {
     }
 
     @Query(() => [Post])
-    posts(): Promise<Post[]> {
-        return Post.find()
+    posts(
+        @Arg('input', { nullable: true }) input?: FetchAllPostsInput
+    ): Promise<Post[]> {
+        const FETCH_LIMIT = 10
+
+        const options: FindManyOptions<Post> = {
+            order: { createdAt: 'DESC' },
+            take: FETCH_LIMIT,
+        }
+
+        if (input) {
+            options.take = Math.min(input.limit, FETCH_LIMIT)
+
+            if (input.cursor) {
+                const date = new Date(parseInt(input.cursor))
+
+                options.where = {
+                    createdAt: LessThan(date),
+                }
+            }
+        }
+
+        return Post.find(options)
     }
 
     @Query(() => Post, { nullable: true })

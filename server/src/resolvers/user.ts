@@ -50,22 +50,14 @@ export class UserResolver {
     async user(
         @Arg('input') { id, username }: UserInput
     ): Promise<User | undefined> {
-        console.log(id, username)
-
         if (id && username) {
-            console.log('Yup')
-            return User.findOne({ id, username }) // TODO: Check if it works
+            return User.findOne({ id, username })
         } else if (id) {
-            console.log('Woop')
-
             return User.findOne({ id })
         } else if (username) {
-            console.log('Nep')
-
             return User.findOne({ username })
         }
 
-        console.log('Yike')
         return undefined
     }
 

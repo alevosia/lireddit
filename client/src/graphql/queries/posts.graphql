@@ -1,8 +1,10 @@
-query AllPosts {
-    posts {
+query FetchAllPosts($input: FetchAllPostsInput) {
+    posts(input: $input) {
         id
         title
-        createdAt
-        updatedAt
+        text
+        author {
+            ...RegularUser
+        }
     }
 }

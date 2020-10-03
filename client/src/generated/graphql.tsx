@@ -22,6 +22,11 @@ export type Query = {
 };
 
 
+export type QueryPostsArgs = {
+  input?: Maybe<FetchAllPostsInput>;
+};
+
+
 export type QueryPostArgs = {
   input: FetchPostInput;
 };
@@ -50,6 +55,11 @@ export type User = {
   updatedAt: Scalars['String'];
   username: Scalars['String'];
   email: Scalars['String'];
+};
+
+export type FetchAllPostsInput = {
+  limit: Scalars['Int'];
+  cursor?: Maybe<Scalars['String']>;
 };
 
 export type FetchPostInput = {
@@ -266,14 +276,20 @@ export type MeQuery = (
   )> }
 );
 
-export type AllPostsQueryVariables = Exact<{ [key: string]: never; }>;
+export type FetchAllPostsQueryVariables = Exact<{
+  input?: Maybe<FetchAllPostsInput>;
+}>;
 
 
-export type AllPostsQuery = (
+export type FetchAllPostsQuery = (
   { __typename?: 'Query' }
   & { posts: Array<(
     { __typename?: 'Post' }
-    & Pick<Post, 'id' | 'title' | 'createdAt' | 'updatedAt'>
+    & Pick<Post, 'id' | 'title' | 'text'>
+    & { author: (
+      { __typename?: 'User' }
+      & RegularUserFragment
+    ) }
   )> }
 );
 
@@ -380,17 +396,19 @@ export const MeDocument = gql`
 export function useMeQuery(options: Omit<Urql.UseQueryArgs<MeQueryVariables>, 'query'> = {}) {
   return Urql.useQuery<MeQuery>({ query: MeDocument, ...options });
 };
-export const AllPostsDocument = gql`
-    query AllPosts {
-  posts {
+export const FetchAllPostsDocument = gql`
+    query FetchAllPosts($input: FetchAllPostsInput) {
+  posts(input: $input) {
     id
     title
-    createdAt
-    updatedAt
+    text
+    author {
+      ...RegularUser
+    }
   }
 }
-    `;
+    ${RegularUserFragmentDoc}`;
 
-export function useAllPostsQuery(options: Omit<Urql.UseQueryArgs<AllPostsQueryVariables>, 'query'> = {}) {
-  return Urql.useQuery<AllPostsQuery>({ query: AllPostsDocument, ...options });
+export function useFetchAllPostsQuery(options: Omit<Urql.UseQueryArgs<FetchAllPostsQueryVariables>, 'query'> = {}) {
+  return Urql.useQuery<FetchAllPostsQuery>({ query: FetchAllPostsDocument, ...options });
 };
