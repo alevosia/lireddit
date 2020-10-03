@@ -6,16 +6,17 @@ import cors from 'cors'
 import express from 'express'
 import session from 'express-session'
 import Redis from 'ioredis'
+import path from 'path'
 import { buildSchema } from 'type-graphql'
-import { COOKIE_NAME, __prod__ } from './constants'
-import { PostResolver } from './resolvers/post'
-import { UserResolver } from './resolvers/user'
 import { createConnection } from 'typeorm'
+import { COOKIE_NAME, __prod__ } from './constants'
 import { Post } from './entities/Post'
 import { User } from './entities/User'
+import { PostResolver } from './resolvers/post'
+import { UserResolver } from './resolvers/user'
 
 const main = async () => {
-    await createConnection({
+    const conn = await createConnection({
         type: 'postgres',
         database: 'lireddit2',
         username: 'postgres',
@@ -23,7 +24,10 @@ const main = async () => {
         logging: true,
         synchronize: !__prod__,
         entities: [User, Post],
+        migrations: [path.join(__dirname, './migrations/*')],
     })
+
+    await conn.runMigrations()
 
     const app = express()
 

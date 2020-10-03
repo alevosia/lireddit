@@ -31,7 +31,7 @@ export class PostResolver {
     posts(
         @Arg('input', { nullable: true }) input?: FetchAllPostsInput
     ): Promise<Post[]> {
-        const FETCH_LIMIT = 10
+        const FETCH_LIMIT = 100
 
         const options: FindManyOptions<Post> = {
             order: { createdAt: 'DESC' },
