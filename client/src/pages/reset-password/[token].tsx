@@ -35,7 +35,6 @@ const ResetPassword: NextPage = () => {
         values,
         { setErrors }
     ) => {
-        console.log(values)
         const response = await resetPassword({ input: values })
 
         if (response.data?.resetPassword.errors) {
