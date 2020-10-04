@@ -200,10 +200,10 @@ export type CreatePostMutation = (
   { __typename?: 'Mutation' }
   & { createPost: (
     { __typename?: 'Post' }
-    & Pick<Post, 'id' | 'title' | 'text'>
+    & Pick<Post, 'id' | 'title' | 'text' | 'createdAt' | 'updatedAt' | 'points'>
     & { author: (
       { __typename?: 'User' }
-      & Pick<User, 'id' | 'username'>
+      & RegularUserFragment
     ) }
   ) }
 );
@@ -323,13 +323,15 @@ export const CreatePostDocument = gql`
     id
     title
     text
+    createdAt
+    updatedAt
+    points
     author {
-      id
-      username
+      ...RegularUser
     }
   }
 }
-    `;
+    ${RegularUserFragmentDoc}`;
 
 export function useCreatePostMutation() {
   return Urql.useMutation<CreatePostMutation, CreatePostMutationVariables>(CreatePostDocument);
