@@ -3,16 +3,16 @@ import { withUrqlClient } from 'next-urql'
 import { Layout } from '../components/Layout'
 import { useFetchAllPostsQuery } from '../generated/graphql'
 import { createUrqlClient } from '../utils/createUrqlClient'
-import { Box, Button, Stack, Heading, Text } from '@chakra-ui/core'
+import { Flex, Box, Button, Stack, Heading, Text } from '@chakra-ui/core'
 import { useState } from 'react'
 
 const Index: NextPage = () => {
-    const [cursor, setCursor] = useState<string>('')
+    const [cursor, setCursor] = useState<string | null>(null)
 
-    const [{ fetching, data }] = useFetchAllPostsQuery({
+    const [{ data, fetching }] = useFetchAllPostsQuery({
         variables: {
             input: {
-                limit: 5,
+                limit: 10,
                 cursor: cursor,
             },
         },
@@ -22,7 +22,6 @@ const Index: NextPage = () => {
         if (data && data.posts.length > 0) {
             const { posts } = data
             const last = posts[posts.length - 1].createdAt
-            console.log(last)
 
             setCursor(last)
         }
@@ -30,13 +29,13 @@ const Index: NextPage = () => {
 
     return (
         <Layout>
-            {fetching ? (
+            <Flex>
+                <Heading mb={5}>LiReddit</Heading>
+            </Flex>
+            {!data && fetching ? (
                 <div>Loading...</div>
-            ) : data ? (
+            ) : data && data.posts.length > 0 ? (
                 <Box>
-                    <Button mb={5} onClick={fetchNextPosts}>
-                        Next
-                    </Button>
                     <Stack spacing={5}>
                         {data.posts.map((p) => (
                             <Box
@@ -58,8 +57,21 @@ const Index: NextPage = () => {
                             </Box>
                         ))}
                     </Stack>
+                    {data ? (
+                        <Flex mt={5}>
+                            <Button
+                                m="auto"
+                                onClick={fetchNextPosts}
+                                isLoading={fetching}
+                            >
+                                load more
+                            </Button>
+                        </Flex>
+                    ) : null}
                 </Box>
-            ) : null}
+            ) : (
+                <Text>No more posts</Text>
+            )}
         </Layout>
     )
 }
