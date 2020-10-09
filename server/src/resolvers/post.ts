@@ -24,8 +24,24 @@ import { PaginatedPosts } from '../typedefs/PaginatedPosts'
 @Resolver(() => Post)
 export class PostResolver {
     @FieldResolver()
-    author(@Root() post: Post) {
-        return User.findOne(post.authorId)
+    async author(
+        @Root() post: Post,
+        @Ctx() { redis }: MyContext
+    ): Promise<User | undefined> {
+        const key = `USER:${post.authorId}`
+        const userString = await redis.get(key)
+
+        if (userString) {
+            return JSON.parse(userString)
+        }
+
+        const user = await User.findOne(post.authorId)
+
+        if (user) {
+            await redis.set(key, JSON.stringify(user))
+        }
+
+        return user
     }
 
     @Query(() => PaginatedPosts)
