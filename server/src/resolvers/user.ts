@@ -32,6 +32,19 @@ export class UserResolver {
         return Post.find({ where: { authorId: user.id } })
     }
 
+    @FieldResolver()
+    email(@Root() { id, email }: User, 
+        @Ctx() { req }: MyContext,
+    ): string {
+        // check if the request is asking for their own email
+        if (req.session.userId === id) {
+            return email
+        }
+
+        // hide email if not
+        return ''
+    }
+
     // Me ===========================================
     @Query(() => User, { nullable: true })
     async me(@Ctx() { req }: MyContext): Promise<User | undefined> {
