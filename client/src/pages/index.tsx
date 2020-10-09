@@ -12,20 +12,24 @@ const Index: NextPage = () => {
     const [{ data, fetching }] = useFetchAllPostsQuery({
         variables: {
             input: {
-                limit: 10,
+                limit: 50,
                 cursor: cursor,
             },
         },
     })
 
     const fetchNextPosts = () => {
-        if (data && data.posts.length > 0) {
-            const { posts } = data
-            const last = posts[posts.length - 1].createdAt
+        if (data && data.posts.items.length > 0) {
+            const items = data.posts.items
+
+            console.log({ items })
+            const last = items[items.length - 1].createdAt
 
             setCursor(last)
         }
     }
+
+    console.log({ data })
 
     return (
         <Layout>
@@ -34,10 +38,10 @@ const Index: NextPage = () => {
             </Flex>
             {!data && fetching ? (
                 <div>Loading...</div>
-            ) : data && data.posts.length > 0 ? (
+            ) : data && data.posts.items.length > 0 ? (
                 <Box>
                     <Stack spacing={5}>
-                        {data.posts.map((p) => (
+                        {data.posts.items.map((p) => (
                             <Box
                                 borderRadius="5px"
                                 borderWidth="1px"
@@ -57,7 +61,7 @@ const Index: NextPage = () => {
                             </Box>
                         ))}
                     </Stack>
-                    {data ? (
+                    {data && data.posts.hasMore ? (
                         <Flex mt={5}>
                             <Button
                                 m="auto"
@@ -69,9 +73,7 @@ const Index: NextPage = () => {
                         </Flex>
                     ) : null}
                 </Box>
-            ) : (
-                <Text>No more posts</Text>
-            )}
+            ) : null}
         </Layout>
     )
 }

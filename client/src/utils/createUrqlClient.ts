@@ -1,6 +1,11 @@
 import { cacheExchange, Resolver } from '@urql/exchange-graphcache'
 import Router from 'next/router'
-import { dedupExchange, Exchange, fetchExchange } from 'urql'
+import {
+    dedupExchange,
+    Exchange,
+    fetchExchange,
+    stringifyVariables,
+} from 'urql'
 import { pipe, tap } from 'wonka'
 import {
     LoginMutation,
@@ -33,11 +38,13 @@ const errorExchange: Exchange = ({ forward }) => (ops$) => {
 const cursorPagination = (): Resolver => {
     return (_parent, fieldArgs, cache, info) => {
         const { parentKey: entityKey, fieldName } = info
+        console.log({ entityKey })
 
         const allFields = cache.inspectFields(entityKey)
         const fieldInfos = allFields.filter(
             (info) => info.fieldName === fieldName
         )
+        console.log({ fieldInfos })
 
         // if not cached, return undefined
         const size = fieldInfos.length
@@ -45,70 +52,47 @@ const cursorPagination = (): Resolver => {
             return undefined
         }
 
-        const results: string[] = []
+        console.log({ fieldArgs })
+
+        const fieldKey = `${fieldName}(${stringifyVariables(fieldArgs)})`
+        console.log({ fieldKey })
+
+        const isCached = !!cache.resolve(
+            cache.resolveFieldByKey(entityKey, fieldKey) as string,
+            'items'
+        )
+        console.log({ isCached })
+
+        // set partial if not cached
+        info.partial = !isCached
+
+        // combine cached data with new data
+        const items: string[] = []
+
+        let hasMore = true
 
         fieldInfos.forEach((fi) => {
-            const data = cache.resolveFieldByKey(
+            const key = cache.resolveFieldByKey(
                 entityKey,
                 fi.fieldKey
-            ) as string[]
+            ) as string
+
+            const data = cache.resolve(key, 'items') as string[]
+            const _hasMore = cache.resolve(key, 'hasMore')
+
+            if (!_hasMore) {
+                hasMore = _hasMore as boolean
+            }
+
             console.log(data)
-            results.push(...data)
+            items.push(...data)
         })
 
-        return results
-
-        //   const visited = new Set();
-        //   let result: NullArray<string> = [];
-        //   let prevOffset: number | null = null;
-
-        //   for (let i = 0; i < size; i++) {
-        //     const { fieldKey, arguments: args } = fieldInfos[i];
-        //     if (args === null || !compareArgs(fieldArgs, args)) {
-        //       continue;
-        //     }
-
-        //     const links = cache.resolveFieldByKey(entityKey, fieldKey) as string[];
-        //     const currentOffset = args[cursorArgument];
-
-        //     if (
-        //       links === null ||
-        //       links.length === 0 ||
-        //       typeof currentOffset !== 'number'
-        //     ) {
-        //       continue;
-        //     }
-
-        //     if (!prevOffset || currentOffset > prevOffset) {
-        //       for (let j = 0; j < links.length; j++) {
-        //         const link = links[j];
-        //         if (visited.has(link)) continue;
-        //         result.push(link);
-        //         visited.add(link);
-        //       }
-        //     } else {
-        //       const tempResult: NullArray<string> = [];
-        //       for (let j = 0; j < links.length; j++) {
-        //         const link = links[j];
-        //         if (visited.has(link)) continue;
-        //         tempResult.push(link);
-        //         visited.add(link);
-        //       }
-        //       result = [...tempResult, ...result];
-        //     }
-
-        //     prevOffset = currentOffset;
-        //   }
-
-        //   const hasCurrentPage = cache.resolve(entityKey, fieldName, fieldArgs);
-        //   if (hasCurrentPage) {
-        //     return result;
-        //   } else if (!(info as any).store.schema) {
-        //     return undefined;
-        //   } else {
-        //     info.partial = true;
-        //     return result;
-        //   }
+        return {
+            hasMore,
+            items: items,
+            __typename: 'PaginatedPosts',
+        }
     }
 }
 
@@ -120,6 +104,9 @@ export const createUrqlClient = (ssrExchange: any) => ({
     exchanges: [
         dedupExchange,
         cacheExchange({
+            keys: {
+                PaginatedPosts: () => null,
+            },
             resolvers: {
                 Query: {
                     posts: cursorPagination(),

@@ -19,6 +19,7 @@ import { MyContext } from '../types'
 import { User } from '../entities/User'
 import { isAuth } from '../middleware/isAuth'
 import { FindManyOptions, LessThan } from 'typeorm'
+import { PaginatedPosts } from '../typedefs/PaginatedPosts'
 
 @Resolver(() => Post)
 export class PostResolver {
@@ -27,30 +28,41 @@ export class PostResolver {
         return User.findOne(post.authorId)
     }
 
-    @Query(() => [Post])
-    posts(
+    @Query(() => PaginatedPosts)
+    async posts(
         @Arg('input', { nullable: true }) input?: FetchAllPostsInput
-    ): Promise<Post[]> {
-        const FETCH_LIMIT = 100
+    ): Promise<PaginatedPosts> {
+        const FETCH_LIMIT = 10
+
+        // the real limit is the lower number between FETCH_LIMIT and input limit
+        const realLimit = input
+            ? Math.min(FETCH_LIMIT, input.limit)
+            : FETCH_LIMIT
+
+        // used to check if there is more data to be fetched
+        const realLimitPlusOne = realLimit + 1
 
         const options: FindManyOptions<Post> = {
             order: { createdAt: 'DESC' },
-            take: FETCH_LIMIT,
+            take: realLimitPlusOne, // take one more than the real limit
         }
 
-        if (input) {
-            options.take = Math.min(input.limit, FETCH_LIMIT)
+        if (input?.cursor) {
+            const date = new Date(parseInt(input.cursor))
 
-            if (input.cursor) {
-                const date = new Date(parseInt(input.cursor))
-
-                options.where = {
-                    createdAt: LessThan(date),
-                }
+            options.where = {
+                createdAt: LessThan(date), // descending order
             }
         }
 
-        return Post.find(options)
+        const posts = await Post.find(options)
+
+        return {
+            // return the real limit
+            items: posts.slice(0, realLimit),
+            // check if the fetched posts has one more than the real limit
+            hasMore: posts.length === realLimitPlusOne,
+        }
     }
 
     @Query(() => Post, { nullable: true })

@@ -14,7 +14,7 @@ export type Scalars = {
 
 export type Query = {
   __typename?: 'Query';
-  posts: Array<Post>;
+  posts: PaginatedPosts;
   post?: Maybe<Post>;
   me?: Maybe<User>;
   user?: Maybe<User>;
@@ -34,6 +34,12 @@ export type QueryPostArgs = {
 
 export type QueryUserArgs = {
   input: UserInput;
+};
+
+export type PaginatedPosts = {
+  __typename?: 'PaginatedPosts';
+  items: Array<Post>;
+  hasMore: Scalars['Boolean'];
 };
 
 export type Post = {
@@ -283,14 +289,18 @@ export type FetchAllPostsQueryVariables = Exact<{
 
 export type FetchAllPostsQuery = (
   { __typename?: 'Query' }
-  & { posts: Array<(
-    { __typename?: 'Post' }
-    & Pick<Post, 'id' | 'title' | 'text' | 'createdAt' | 'updatedAt' | 'points'>
-    & { author: (
-      { __typename?: 'User' }
-      & RegularUserFragment
-    ) }
-  )> }
+  & { posts: (
+    { __typename?: 'PaginatedPosts' }
+    & Pick<PaginatedPosts, 'hasMore'>
+    & { items: Array<(
+      { __typename?: 'Post' }
+      & Pick<Post, 'id' | 'title' | 'text' | 'createdAt' | 'updatedAt' | 'points'>
+      & { author: (
+        { __typename?: 'User' }
+        & Pick<User, 'id' | 'username'>
+      ) }
+    )> }
+  ) }
 );
 
 export const RegularUserFragmentDoc = gql`
@@ -401,18 +411,22 @@ export function useMeQuery(options: Omit<Urql.UseQueryArgs<MeQueryVariables>, 'q
 export const FetchAllPostsDocument = gql`
     query FetchAllPosts($input: FetchAllPostsInput) {
   posts(input: $input) {
-    id
-    title
-    text
-    createdAt
-    updatedAt
-    points
-    author {
-      ...RegularUser
+    items {
+      id
+      title
+      text
+      createdAt
+      updatedAt
+      points
+      author {
+        id
+        username
+      }
     }
+    hasMore
   }
 }
-    ${RegularUserFragmentDoc}`;
+    `;
 
 export function useFetchAllPostsQuery(options: Omit<Urql.UseQueryArgs<FetchAllPostsQueryVariables>, 'query'> = {}) {
   return Urql.useQuery<FetchAllPostsQuery>({ query: FetchAllPostsDocument, ...options });

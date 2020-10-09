@@ -1,13 +1,18 @@
 query FetchAllPosts($input: FetchAllPostsInput) {
     posts(input: $input) {
-        id
-        title
-        text
-        createdAt
-        updatedAt
-        points
-        author {
-            ...RegularUser
+        items {
+            id
+            title
+            text
+            createdAt
+            updatedAt
+            points
+            author {
+                id
+                username
+            }
         }
+
+        hasMore
     }
 }
