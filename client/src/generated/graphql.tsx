@@ -60,7 +60,7 @@ export type User = {
   createdAt: Scalars['String'];
   updatedAt: Scalars['String'];
   username: Scalars['String'];
-  email: Scalars['String'];
+  email?: Maybe<Scalars['String']>;
 };
 
 export type FetchAllPostsInput = {
