@@ -82,6 +82,7 @@ export type Mutation = {
   createPost: Post;
   updatePost?: Maybe<Post>;
   deletePost: Scalars['Boolean'];
+  vote: Scalars['Boolean'];
   register: AuthResponse;
   login: AuthResponse;
   deleteUser: Scalars['Boolean'];
@@ -103,6 +104,11 @@ export type MutationUpdatePostArgs = {
 
 export type MutationDeletePostArgs = {
   id: Scalars['Float'];
+};
+
+
+export type MutationVoteArgs = {
+  input: VoteInput;
 };
 
 
@@ -138,6 +144,11 @@ export type CreatePostInput = {
 export type UpdatePostInput = {
   id: Scalars['Int'];
   title: Scalars['String'];
+};
+
+export type VoteInput = {
+  postId: Scalars['Int'];
+  isPositive: Scalars['Boolean'];
 };
 
 export type AuthResponse = {
@@ -411,6 +422,7 @@ export function useMeQuery(options: Omit<Urql.UseQueryArgs<MeQueryVariables>, 'q
 export const FetchAllPostsDocument = gql`
     query FetchAllPosts($input: FetchAllPostsInput) {
   posts(input: $input) {
+    hasMore
     items {
       id
       title
@@ -423,7 +435,6 @@ export const FetchAllPostsDocument = gql`
         username
       }
     }
-    hasMore
   }
 }
     `;

@@ -83,3 +83,12 @@ export class DeleteUserInput {
     @Field(() => Int)
     id: number
 }
+
+@InputType()
+export class VoteInput {
+    @Field(() => Int)
+    postId: number
+
+    @Field(() => Boolean)
+    isPositive: boolean
+}

@@ -43,7 +43,6 @@ const CreatePost: NextPage = () => {
                 >
                     {({ isSubmitting }) => (
                         <Form>
-                            <div>{user.username}</div>
                             {status === 'ERROR' ? (
                                 <Box textAlign="center" color="#FF0000">
                                     {error}

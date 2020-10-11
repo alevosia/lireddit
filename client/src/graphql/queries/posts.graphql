@@ -1,5 +1,7 @@
 query FetchAllPosts($input: FetchAllPostsInput) {
     posts(input: $input) {
+        hasMore
+
         items {
             id
             title
@@ -12,7 +14,5 @@ query FetchAllPosts($input: FetchAllPostsInput) {
                 username
             }
         }
-
-        hasMore
     }
 }

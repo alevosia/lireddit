@@ -3,8 +3,8 @@ import { withUrqlClient } from 'next-urql'
 import { Layout } from '../components/Layout'
 import { useFetchAllPostsQuery } from '../generated/graphql'
 import { createUrqlClient } from '../utils/createUrqlClient'
-import { Flex, Box, Button, Stack, Heading, Text } from '@chakra-ui/core'
-import { useState } from 'react'
+import { Flex, Box, Button, Stack, Heading, Text, Icon } from '@chakra-ui/core'
+import React, { useState } from 'react'
 
 const Index: NextPage = () => {
     const [cursor, setCursor] = useState<string | null>(null)
@@ -12,7 +12,7 @@ const Index: NextPage = () => {
     const [{ data, fetching }] = useFetchAllPostsQuery({
         variables: {
             input: {
-                limit: 50,
+                limit: 10,
                 cursor: cursor,
             },
         },
@@ -29,7 +29,7 @@ const Index: NextPage = () => {
         }
     }
 
-    console.log({ data })
+    // console.log({ data })
 
     return (
         <Layout>
@@ -42,7 +42,7 @@ const Index: NextPage = () => {
                 <Box>
                     <Stack spacing={5}>
                         {data.posts.items.map((p) => (
-                            <Box
+                            <Flex
                                 borderRadius="5px"
                                 borderWidth="1px"
                                 padding="10px"
@@ -50,15 +50,21 @@ const Index: NextPage = () => {
                                 key={p.id}
                                 shadow="sm"
                             >
-                                <Text></Text>
-                                <Heading size="md">{p.title}</Heading>
-                                <Text>
-                                    <strong>{p.author.username}</strong>
-                                </Text>
-                                <Text>
-                                    {p.text.substring(0, 250).concat('...')}
-                                </Text>
-                            </Box>
+                                <Flex direction='column' justifyContent='center' alignItems='center' mr={3}>
+                                    <Icon name="chevron-up" size="24px" />
+                                    {p.points}
+                                    <Icon name="chevron-down" size="24px" />
+                                </Flex>
+
+                                <Box>
+                                    <Heading size="md">{p.title} ({p.points})</Heading>
+                                    <Text mb={2}>by {p.author.username}</Text>
+                                    <Text>
+                                        {p.text.substring(0, 250).concat('...')}
+                                    </Text>
+                                </Box>
+
+                            </Flex>
                         ))}
                     </Stack>
                     {data && data.posts.hasMore ? (

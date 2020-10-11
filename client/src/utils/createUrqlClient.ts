@@ -38,13 +38,13 @@ const errorExchange: Exchange = ({ forward }) => (ops$) => {
 const cursorPagination = (): Resolver => {
     return (_parent, fieldArgs, cache, info) => {
         const { parentKey: entityKey, fieldName } = info
-        console.log({ entityKey })
+        // console.log({ entityKey })
 
         const allFields = cache.inspectFields(entityKey)
         const fieldInfos = allFields.filter(
             (info) => info.fieldName === fieldName
         )
-        console.log({ fieldInfos })
+        // console.log({ fieldInfos })
 
         // if not cached, return undefined
         const size = fieldInfos.length
@@ -52,16 +52,16 @@ const cursorPagination = (): Resolver => {
             return undefined
         }
 
-        console.log({ fieldArgs })
+        // console.log({ fieldArgs })
 
         const fieldKey = `${fieldName}(${stringifyVariables(fieldArgs)})`
-        console.log({ fieldKey })
+        // console.log({ fieldKey })
 
         const isCached = !!cache.resolve(
             cache.resolveFieldByKey(entityKey, fieldKey) as string,
             'items'
         )
-        console.log({ isCached })
+        // console.log({ isCached })
 
         // set partial if not cached
         info.partial = !isCached
@@ -84,7 +84,7 @@ const cursorPagination = (): Resolver => {
                 hasMore = _hasMore as boolean
             }
 
-            console.log(data)
+            // console.log(data)
             items.push(...data)
         })
 
@@ -114,6 +114,14 @@ export const createUrqlClient = (ssrExchange: any) => ({
             },
             updates: {
                 Mutation: {
+                    createPost: (_result, _, cache, __) => {
+                        cache.invalidate('Query', 'posts', {
+                            input: {
+                                limit: 10,
+                                cursor: null
+                            }
+                        })
+                    },
                     // update MeQuery's value in cache every login
                     login: (_result, _, cache, __) => {
                         betterUpdateQuery<LoginMutation, MeQuery>(

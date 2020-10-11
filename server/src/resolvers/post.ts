@@ -14,12 +14,14 @@ import {
     CreatePostInput,
     FetchPostInput,
     FetchAllPostsInput,
+    VoteInput,
 } from '../typedefs'
 import { MyContext } from '../types'
 import { User } from '../entities/User'
 import { isAuth } from '../middleware/isAuth'
 import { FindManyOptions, LessThan } from 'typeorm'
 import { PaginatedPosts } from '../typedefs/PaginatedPosts'
+import { Updoot } from '../entities/Updoot'
 
 @Resolver(() => Post)
 export class PostResolver {
@@ -48,7 +50,7 @@ export class PostResolver {
     async posts(
         @Arg('input', { nullable: true }) input?: FetchAllPostsInput
     ): Promise<PaginatedPosts> {
-        const FETCH_LIMIT = 10
+        const FETCH_LIMIT = 100
 
         // the real limit is the lower number between FETCH_LIMIT and input limit
         const realLimit = input
@@ -124,6 +126,46 @@ export class PostResolver {
             return false
         }
 
+        return true
+    }
+
+    @FieldResolver()
+    async points(
+        @Root() post: Post,
+    ): Promise<number> {
+        const updoots = await Updoot.find({ where: { postId: post.id }})
+
+        const points = updoots.reduce(
+            (total, updoot) => total += updoot.value
+        , 0)
+
+        return points
+    }
+
+    @Mutation(() => Boolean)
+    @UseMiddleware(isAuth)
+    async vote(
+        @Arg('input') { postId, isPositive }: VoteInput,
+        @Ctx() { req }: MyContext
+    ): Promise<Boolean> {
+        const post = await Post.findOne(postId)
+
+        if (!post) {
+            return false
+        }
+
+        const { userId } = req.session
+        const value = isPositive ? 1 : -1
+
+        await Updoot.create({
+            userId,
+            postId,
+            value
+        }).save()
+
+        // post.points += 1
+        // await post.save()
+        
         return true
     }
 }

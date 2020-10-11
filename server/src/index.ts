@@ -14,6 +14,7 @@ import { Post } from './entities/Post'
 import { User } from './entities/User'
 import { PostResolver } from './resolvers/post'
 import { UserResolver } from './resolvers/user'
+import { Updoot } from './entities/Updoot'
 
 const main = async () => {
     const conn = await createConnection({
@@ -23,7 +24,7 @@ const main = async () => {
         password: 'postgres',
         logging: true,
         synchronize: !__prod__,
-        entities: [User, Post],
+        entities: [User, Post, Updoot],
         migrations: [path.join(__dirname, './migrations/*')],
     })
 
