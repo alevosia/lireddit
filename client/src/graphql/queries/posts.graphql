@@ -3,16 +3,7 @@ query FetchAllPosts($input: FetchAllPostsInput) {
         hasMore
 
         items {
-            id
-            title
-            text
-            createdAt
-            updatedAt
-            points
-            author {
-                id
-                username
-            }
+            ...PostSnippet
         }
     }
 }

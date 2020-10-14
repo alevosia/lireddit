@@ -46,6 +46,7 @@ export type Post = {
   __typename?: 'Post';
   id: Scalars['Int'];
   author: User;
+  voted: Scalars['Int'];
   createdAt: Scalars['String'];
   updatedAt: Scalars['String'];
   title: Scalars['String'];
@@ -83,6 +84,7 @@ export type Mutation = {
   updatePost?: Maybe<Post>;
   deletePost: Scalars['Boolean'];
   vote: Scalars['Boolean'];
+  deleteVote: Scalars['Boolean'];
   register: AuthResponse;
   login: AuthResponse;
   deleteUser: Scalars['Boolean'];
@@ -109,6 +111,11 @@ export type MutationDeletePostArgs = {
 
 export type MutationVoteArgs = {
   input: VoteInput;
+};
+
+
+export type MutationDeleteVoteArgs = {
+  input: DeleteVoteInput;
 };
 
 
@@ -151,6 +158,10 @@ export type VoteInput = {
   isPositive: Scalars['Boolean'];
 };
 
+export type DeleteVoteInput = {
+  postId: Scalars['Int'];
+};
+
 export type AuthResponse = {
   __typename?: 'AuthResponse';
   errors?: Maybe<Array<FieldError>>;
@@ -186,6 +197,15 @@ export type ResetPasswordInput = {
   token: Scalars['String'];
   newPassword: Scalars['String'];
 };
+
+export type PostSnippetFragment = (
+  { __typename?: 'Post' }
+  & Pick<Post, 'id' | 'title' | 'text' | 'createdAt' | 'updatedAt' | 'points' | 'voted'>
+  & { author: (
+    { __typename?: 'User' }
+    & Pick<User, 'id' | 'username'>
+  ) }
+);
 
 export type RegularAuthResponseFragment = (
   { __typename?: 'AuthResponse' }
@@ -223,6 +243,16 @@ export type CreatePostMutation = (
       & RegularUserFragment
     ) }
   ) }
+);
+
+export type DeleteVoteMutationVariables = Exact<{
+  input: DeleteVoteInput;
+}>;
+
+
+export type DeleteVoteMutation = (
+  { __typename?: 'Mutation' }
+  & Pick<Mutation, 'deleteVote'>
 );
 
 export type ForgotPasswordMutationVariables = Exact<{
@@ -282,6 +312,16 @@ export type ResetPasswordMutation = (
   ) }
 );
 
+export type VoteMutationVariables = Exact<{
+  input: VoteInput;
+}>;
+
+
+export type VoteMutation = (
+  { __typename?: 'Mutation' }
+  & Pick<Mutation, 'vote'>
+);
+
 export type MeQueryVariables = Exact<{ [key: string]: never; }>;
 
 
@@ -305,15 +345,26 @@ export type FetchAllPostsQuery = (
     & Pick<PaginatedPosts, 'hasMore'>
     & { items: Array<(
       { __typename?: 'Post' }
-      & Pick<Post, 'id' | 'title' | 'text' | 'createdAt' | 'updatedAt' | 'points'>
-      & { author: (
-        { __typename?: 'User' }
-        & Pick<User, 'id' | 'username'>
-      ) }
+      & PostSnippetFragment
     )> }
   ) }
 );
 
+export const PostSnippetFragmentDoc = gql`
+    fragment PostSnippet on Post {
+  id
+  title
+  text
+  createdAt
+  updatedAt
+  points
+  voted
+  author {
+    id
+    username
+  }
+}
+    `;
 export const RegularUserFragmentDoc = gql`
     fragment RegularUser on User {
   id
@@ -356,6 +407,15 @@ export const CreatePostDocument = gql`
 
 export function useCreatePostMutation() {
   return Urql.useMutation<CreatePostMutation, CreatePostMutationVariables>(CreatePostDocument);
+};
+export const DeleteVoteDocument = gql`
+    mutation DeleteVote($input: DeleteVoteInput!) {
+  deleteVote(input: $input)
+}
+    `;
+
+export function useDeleteVoteMutation() {
+  return Urql.useMutation<DeleteVoteMutation, DeleteVoteMutationVariables>(DeleteVoteDocument);
 };
 export const ForgotPasswordDocument = gql`
     mutation ForgotPassword($input: ForgotPasswordInput!) {
@@ -408,6 +468,15 @@ export const ResetPasswordDocument = gql`
 export function useResetPasswordMutation() {
   return Urql.useMutation<ResetPasswordMutation, ResetPasswordMutationVariables>(ResetPasswordDocument);
 };
+export const VoteDocument = gql`
+    mutation Vote($input: VoteInput!) {
+  vote(input: $input)
+}
+    `;
+
+export function useVoteMutation() {
+  return Urql.useMutation<VoteMutation, VoteMutationVariables>(VoteDocument);
+};
 export const MeDocument = gql`
     query Me {
   me {
@@ -424,20 +493,11 @@ export const FetchAllPostsDocument = gql`
   posts(input: $input) {
     hasMore
     items {
-      id
-      title
-      text
-      createdAt
-      updatedAt
-      points
-      author {
-        id
-        username
-      }
+      ...PostSnippet
     }
   }
 }
-    `;
+    ${PostSnippetFragmentDoc}`;
 
 export function useFetchAllPostsQuery(options: Omit<Urql.UseQueryArgs<FetchAllPostsQueryVariables>, 'query'> = {}) {
   return Urql.useQuery<FetchAllPostsQuery>({ query: FetchAllPostsDocument, ...options });

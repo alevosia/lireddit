@@ -3,8 +3,17 @@ import { withUrqlClient } from 'next-urql'
 import { Layout } from '../components/Layout'
 import { useFetchAllPostsQuery } from '../generated/graphql'
 import { createUrqlClient } from '../utils/createUrqlClient'
-import { Flex, Box, Button, Stack, Heading, Text, Icon } from '@chakra-ui/core'
+import {
+    Flex,
+    Box,
+    Button,
+    Stack,
+    Heading,
+    Text,
+    IconButton,
+} from '@chakra-ui/core'
 import React, { useState } from 'react'
+import { UpdootSection } from '../components/UpdootSection'
 
 const Index: NextPage = () => {
     const [cursor, setCursor] = useState<string | null>(null)
@@ -29,8 +38,6 @@ const Index: NextPage = () => {
         }
     }
 
-    // console.log({ data })
-
     return (
         <Layout>
             <Flex>
@@ -50,20 +57,15 @@ const Index: NextPage = () => {
                                 key={p.id}
                                 shadow="sm"
                             >
-                                <Flex direction='column' justifyContent='center' alignItems='center' mr={3}>
-                                    <Icon name="chevron-up" size="24px" />
-                                    {p.points}
-                                    <Icon name="chevron-down" size="24px" />
-                                </Flex>
+                                <UpdootSection post={p} />
 
                                 <Box>
-                                    <Heading size="md">{p.title} ({p.points})</Heading>
+                                    <Heading size="md">{p.title}</Heading>
                                     <Text mb={2}>by {p.author.username}</Text>
                                     <Text>
                                         {p.text.substring(0, 250).concat('...')}
                                     </Text>
                                 </Box>
-
                             </Flex>
                         ))}
                     </Stack>

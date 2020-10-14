@@ -8,13 +8,16 @@ import {
 } from 'urql'
 import { pipe, tap } from 'wonka'
 import {
+    DeleteVoteMutationVariables,
     LoginMutation,
     LogoutMutation,
     MeDocument,
     MeQuery,
     RegisterMutation,
+    VoteMutationVariables,
 } from '../generated/graphql'
 import { betterUpdateQuery } from './betterUpdateQuery'
+import gql from 'graphql-tag'
 
 const errorExchange: Exchange = ({ forward }) => (ops$) => {
     return pipe(
@@ -118,8 +121,8 @@ export const createUrqlClient = (ssrExchange: any) => ({
                         cache.invalidate('Query', 'posts', {
                             input: {
                                 limit: 10,
-                                cursor: null
-                            }
+                                cursor: null,
+                            },
                         })
                     },
                     // update MeQuery's value in cache every login
@@ -164,6 +167,93 @@ export const createUrqlClient = (ssrExchange: any) => ({
                             { query: MeDocument },
                             _result,
                             () => ({ me: null })
+                        )
+                    },
+                    vote: (_result, args, cache, __) => {
+                        console.log('Vote')
+
+                        const {
+                            input: { isPositive, postId },
+                        } = args as VoteMutationVariables
+
+                        const data = cache.readFragment(
+                            gql`
+                                fragment _ on Post {
+                                    id
+                                    points
+                                    voted
+                                }
+                            `,
+                            { id: postId } as any
+                        )
+
+                        console.log(data)
+
+                        if (!data) {
+                            return
+                        }
+
+                        const points = data.points as number
+                        let newPoints = points
+
+                        if (data.voted) {
+                            if (isPositive && data.voted === -1) {
+                                newPoints = points + 2
+                            } else if (!isPositive && data.voted === 1) {
+                                newPoints = points - 2
+                            }
+                        } else {
+                            newPoints = points + (isPositive ? 1 : -1)
+                        }
+
+                        cache.writeFragment(
+                            gql`
+                                fragment __ on Post {
+                                    points
+                                }
+                            `,
+                            {
+                                id: postId,
+                                points: newPoints,
+                                voted: isPositive ? 1 : -1,
+                            } as any
+                        )
+                    },
+                    deleteVote: (_result, args, cache, __) => {
+                        console.log('Delete Vote')
+
+                        const {
+                            input: { postId },
+                        } = args as DeleteVoteMutationVariables
+
+                        const data = cache.readFragment(
+                            gql`
+                                fragment _ on Post {
+                                    id
+                                    points
+                                }
+                            `,
+                            { id: postId } as any
+                        )
+
+                        if (!data) {
+                            return
+                        }
+
+                        const points = data.points as number
+                        const newPoints = points + (data.voted === 1 ? -1 : +1)
+
+                        cache.writeFragment(
+                            gql`
+                                fragment __ on Post {
+                                    points
+                                }
+                            `,
+                            {
+                                id: postId,
+                                points: newPoints,
+                                voted: 0,
+                            } as any
                         )
                     },
                 },

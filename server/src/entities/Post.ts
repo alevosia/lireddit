@@ -29,6 +29,9 @@ export class Post extends BaseEntity {
     @OneToMany(() => Updoot, (updoot) => updoot.post)
     updoots: Updoot[]
 
+    @Field(() => Int)
+    voted: number
+
     @Field(() => String)
     @CreateDateColumn()
     createdAt: Date

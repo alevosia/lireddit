@@ -15,6 +15,7 @@ import {
     FetchPostInput,
     FetchAllPostsInput,
     VoteInput,
+    DeleteVoteInput,
 } from '../typedefs'
 import { MyContext } from '../types'
 import { User } from '../entities/User'
@@ -25,6 +26,18 @@ import { Updoot } from '../entities/Updoot'
 
 @Resolver(() => Post)
 export class PostResolver {
+    @FieldResolver()
+    async voted(
+        @Root() post: Post,
+        @Ctx() { req }: MyContext
+    ): Promise<number> {
+        const updoot = await Updoot.findOne({
+            where: { userId: req.session.userId, postId: post.id },
+        })
+
+        return updoot?.value || 0
+    }
+
     @FieldResolver()
     async author(
         @Root() post: Post,
@@ -130,14 +143,13 @@ export class PostResolver {
     }
 
     @FieldResolver()
-    async points(
-        @Root() post: Post,
-    ): Promise<number> {
-        const updoots = await Updoot.find({ where: { postId: post.id }})
+    async points(@Root() post: Post): Promise<number> {
+        const updoots = await Updoot.find({ where: { postId: post.id } })
 
         const points = updoots.reduce(
-            (total, updoot) => total += updoot.value
-        , 0)
+            (total, updoot) => (total += updoot.value),
+            0
+        )
 
         return points
     }
@@ -160,12 +172,26 @@ export class PostResolver {
         await Updoot.create({
             userId,
             postId,
-            value
+            value,
         }).save()
 
         // post.points += 1
         // await post.save()
-        
+
         return true
+    }
+
+    @Mutation(() => Boolean)
+    @UseMiddleware(isAuth)
+    async deleteVote(
+        @Arg('input') { postId }: DeleteVoteInput,
+        @Ctx() { req }: MyContext
+    ): Promise<Boolean> {
+        const updoot = await Updoot.delete({
+            postId,
+            userId: req.session.userId,
+        })
+
+        return !!updoot.affected
     }
 }
